@@ -63,7 +63,6 @@ public class ProjectPage {
                     .click();
             log.info("Кликнули по центральной кнопке 'Create new suite'.");
         } catch (ElementNotFound e) {
-            // Если проект уже не пустой, кликаем по стандартной верхней кнопке "+ Suite" или "+ Сьют"
             log.info("Центральная кнопка не найдена. Пытаемся кликнуть по верхней панели инструментов...");
             $x("//button[contains(., 'Suite') or contains(., 'сьют')] | //*[text()='+ Suite']")
                     .shouldBe(visible, java.time.Duration.ofSeconds(5))
