@@ -37,6 +37,11 @@ jobs:
       USER_EMAIL: ${{ secrets.QASE_USER_EMAIL }}
       USER_PASSWORD: ${{ secrets.QASE_USER_PASSWORD }}
 
+    services:
+      ollama:
+        image: ollama/ollama:latest
+        ports: [ 11434:11434 ]
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -57,15 +62,23 @@ jobs:
             echo "suite_name=api-smoke" >> $GITHUB_OUTPUT
           fi
 
-      - name: Install and Start Ollama Engine (API & All)
+      - name: Wait for Ollama to start (API & All)
         if: contains(steps.target-suite.outputs.suite_name, 'api') || steps.target-suite.outputs.suite_name == 'all-tests'
         run: |
-          curl -fsSL --fail https://ollama.com | bash
-          nohup ollama serve > ollama.log 2>&1 &
-          echo "Waiting for Ollama engine to wake up..."
-          sleep 10
-          echo "Pulling Qwen-Coder micro model..."
-          ollama pull qwen2.5-coder:1.5b
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:11434/api/version; then
+              echo "Ollama is ready!"
+              break
+            fi
+            sleep 3
+          done
+
+      - name: Pull Qwen model (API & All)
+        if: contains(steps.target-suite.outputs.suite_name, 'api') || steps.target-suite.outputs.suite_name == 'all-tests'
+        run: |
+          curl -X POST http://localhost:11434/api/pull \
+            -H "Content-Type: application/json" \
+            -d '{"model": "qwen2.5-coder:1.5b"}'
 
       - name: Run Automation Tests
         run: |
