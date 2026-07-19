@@ -8,13 +8,11 @@
 
 name: Qase Framework CI & Allure Report
 
-# Триггеры запуска пайплайна
 on:
   push:
     branches: [ "master", "main" ]
   pull_request:
     branches: [ "master", "main" ]
-  # Сохраняем возможность ручного запуска любого сьюта по кнопке
   workflow_dispatch:
     inputs:
       test_suite:
@@ -27,7 +25,7 @@ on:
           - 'ui-smoke'
           - 'api-regression'
           - 'ui-regression'
-          - 'tests'
+          - 'all-tests'
 
 jobs:
   run-tests:
@@ -50,8 +48,6 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # Динамически определяем имя сьюта:
-      # Если это push/PR — берем дефолтный 'api-smoke'. Если ручной запуск — берем то, что выбрал юзер.
       - name: Determine Test Suite Name
         id: target-suite
         run: |
@@ -61,25 +57,22 @@ jobs:
             echo "suite_name=api-smoke" >> $GITHUB_OUTPUT
           fi
 
-      # Инициализируем Ollama, только если запускается API сьют или All-Tests
       - name: Install and Start Ollama Engine (API & All)
         if: contains(steps.target-suite.outputs.suite_name, 'api') || steps.target-suite.outputs.suite_name == 'all-tests'
         run: |
-          curl -fsSL https://ollama.com | sh
+          curl -fsSL --fail https://ollama.com | bash
           nohup ollama serve > ollama.log 2>&1 &
           echo "Waiting for Ollama engine to wake up..."
           sleep 10
           echo "Pulling Qwen-Coder micro model..."
           ollama pull qwen2.5-coder:1.5b
 
-      # Запуск тестов через Maven с подстановкой вычисленного XML-файла
       - name: Run Automation Tests
         run: |
           echo "Запускается сьют: src/test/resources/${{ steps.target-suite.outputs.suite_name }}-suite.xml"
           mvn clean test -DsuiteXmlFile=src/test/resources/${{ steps.target-suite.outputs.suite_name }}-suite.xml -Dtoken=$QASE_TOKEN -Duser=$USER_EMAIL -Dpassword=$USER_PASSWORD
         continue-on-error: true
 
-      # Вытягиваем ветку gh-pages для сохранения трендов и истории в Allure
       - name: Get Allure history
         uses: actions/checkout@v4
         if: always()
@@ -88,7 +81,6 @@ jobs:
           ref: gh-pages
           path: gh-pages
 
-      # Собираем интерактивный Allure Report
       - name: Generate Allure Report
         uses: simple-elf/allure-report-action@master
         if: always()
@@ -97,7 +89,6 @@ jobs:
           allure_history: allure-history
           keep_reports: 20
 
-      # Публикуем сгенерированный Allure-отчет на статический сайт GitHub Pages
       - name: Deploy Allure Report to GitHub Pages
         if: always()
         uses: peaceiris/actions-gh-pages@v3
@@ -105,3 +96,11 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-history
+
+      - name: Upload UI Failure Screenshots
+        if: failure() && (contains(steps.target-suite.outputs.suite_name, 'ui') || steps.target-suite.outputs.suite_name == 'all-tests')
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-screenshots
+          path: build/reports/tests
+          retention-days: 3
