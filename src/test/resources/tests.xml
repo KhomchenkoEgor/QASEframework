@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE suite SYSTEM "https://testng.org">
-<!-- Строгая последовательность для стабильности ИИ-генератора и React-сессий UI -->
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 <suite name="Qase Ultimate Full Automation Suite" verbose="1">
 
     <listeners>
@@ -9,13 +8,14 @@
         <listener class-name="listeners.RetryListener"/>
     </listeners>
 
-    <test name="All API and UI Tests Sequential Run">
-        <!-- Дефолтный браузер для UI-тестов, входящих в общий прогон -->
-        <parameter name="browser" value="chrome"/>
-
-        <!-- Сканируем абсолютно все тесты в обоих пакетах без фильтрации по группам -->
+    <test name="Phase 1 - Pure API Tests Run">
         <packages>
             <package name="tests.api"/>
+        </packages>
+    </test>
+    <test name="Phase 2 - Pure UI Tests Run">
+        <parameter name="browser" value="chrome"/>
+        <packages>
             <package name="tests.ui"/>
         </packages>
     </test>

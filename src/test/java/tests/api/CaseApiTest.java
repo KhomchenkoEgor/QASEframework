@@ -22,7 +22,6 @@ import static org.testng.Assert.*;
 public class CaseApiTest {
 
     private final String projectCode = "QA34" + (int)(Math.random() * 100000);
-    private Integer caseId;
 
     @BeforeMethod(alwaysRun = true)
     public void createProjectBeforeTest() {
@@ -76,7 +75,7 @@ public class CaseApiTest {
         assertTrue(createdCase.getStatus(), "Case was not created!");
         assertNotNull(createdCase.getResult(), "Result is NULL");
 
-        caseId = createdCase.getResult().getId();
+        Integer caseId = createdCase.getResult().getId();
 
         CaseRq updateRq = CaseRq.builder()
                 .title("updated_title")

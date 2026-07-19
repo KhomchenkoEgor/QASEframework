@@ -43,22 +43,18 @@ public class SuiteApiTest {
         log.info("Тест: Сборка дерева тест-сьютов в репозитории: {}", projectCode);
         SuiteRq parentRq = QwenDataGenerator.generateSuiteData();
         SuiteRq childRq = QwenDataGenerator.generateSuiteData();
-
         SuiteRs parentRs = SuiteAdapter.createSuite(parentRq, projectCode);
         assertTrue(parentRs.getStatus(), "Не удалось создать родительский сьют через API!");
         int parentId = parentRs.getResult().getId();
-
         childRq.setParentId(parentId);
         SuiteRs childRs = SuiteAdapter.createSuite(childRq, projectCode);
         assertTrue(childRs.getStatus(), "Не удалось создать вложенный сьют через API!");
         int childId = childRs.getResult().getId();
-
         var getChildResponse = SuiteAdapter.getSuite(projectCode, childId);
         assertEquals(getChildResponse.jsonPath().getInt("result.parent_id"), parentId,
                 "Дочерний сьют привязан к неверному родительскому ID!");
         assertEquals(getChildResponse.jsonPath().getString("result.title"), childRq.getTitle(),
                 "Имя сьюта в базе не совпадает со сгенерированным ИИ!");
-
         SuiteAdapter.deleteSuite(projectCode, parentId);
         log.info("Каскадное удаление родительского ID {} и вложенного ID {} завершено.", parentId, childId);
     }

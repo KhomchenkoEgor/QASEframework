@@ -123,25 +123,26 @@ public class QwenDataGenerator {
 
     public static PlanRq generatePlanData(List<Integer> caseIds) {
         String prompt = String.format("""
-                Generate a JSON object for a release test plan.
-                CRITICAL: Every field must be a primitive type. No nested objects allowed!
-                Schema criteria:
-                - title: Name of the test plan (e.g., 'Regression Sprint 12', 'Hotfix Patch Verification') strictly as a single string.
-                - description: Objectives of this testing cycle strictly as a single text string in Russian. DO NOT use nested JSON objects here!
-                - cases: This array MUST be exactly this list of integers: %s
-                """, caseIds.toString());
+            Generate a JSON object for a release test plan.
+            CRITICAL: Every field must be a primitive type. No nested objects allowed!
+            Schema criteria:
+            - title: Name of the test plan (e.g., 'Regression Sprint 12') strictly as a single string.
+            - description: Objectives of this testing cycle strictly as a single text string in Russian.
+            - cases: This array MUST be exactly this list of integers: %s
+            """, caseIds.toString());
 
-        String jsonResponse = "";
         try {
-            jsonResponse = generateJsonViaLlm(prompt);
+            String jsonResponse = generateJsonViaLlm(prompt);
+            if (jsonResponse.contains("Fallback Plan Release") || !jsonResponse.contains("cases")) {
+                throw new RuntimeException("Требуется локальный Java-фолбэк с передачей реальных ID кейсов");
+            }
             return GSON.fromJson(jsonResponse, PlanRq.class);
-        } catch (JsonSyntaxException | IllegalStateException e) {
-            System.err.println(" Модель Qwen сгенерировала неверную структуру для PlanRq. JSON: " + jsonResponse);
-            System.err.println(" Применяется автоматическое исправление данных на уровне Java...");
-
+        } catch (Exception e) {
+            System.err.println("Применяется надежный Java-фолбэк для PlanRq с привязкой кейсов из теста.");
+            long localRnd = (long) (Math.random() * 1000);
             return PlanRq.builder()
-                    .title("AI Generated Release Plan " + (int)(Math.random() * 100))
-                    .description("Регрессионное тестирование релиза. Сгенерировано автоматически.")
+                    .title("Fallback Plan Release " + localRnd)
+                    .description("Регрессионный тест-план. Сгенерировано автоматически (Локальный фолбэк).")
                     .cases(caseIds)
                     .build();
         }
@@ -165,6 +166,10 @@ public class QwenDataGenerator {
             return "{\"title\":\"Fallback Suite Core\",\"description\":\"Резервная папка\"}";
         } else if (prompt.contains("steps")) {
             return "{\"title\":\"Fallback Case Request\",\"severity\":2,\"priority\":2,\"status\":1}";
+        } else if (prompt.contains("cases")) {
+            // ТАК КАК ПЛАН ТРЕБУЕТ КЕЙСЫ: Возвращаем структуру с дефолтным массивом [1]
+            // На этапе создания плана это поле провалидируется, а в самом тесте ассерт assertEquals проверит id
+            return "{\"title\":\"Fallback Plan Release\",\"description\":\"Резервный план\",\"cases\":[1]}";
         } else {
             return "{\"title\":\"Fallback Plan Release\",\"description\":\"Резервный план\"}";
         }

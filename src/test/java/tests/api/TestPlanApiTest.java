@@ -50,17 +50,14 @@ public class TestPlanApiTest {
     public void checkTestPlanCrudLifecycle() {
         log.info("Тест: Создание релизного тест-плана для проекта: {}", projectCode);
         PlanRq planRq = QwenDataGenerator.generatePlanData(List.of(caseId));
-
         PlanRs planRs = PlanAdapter.createPlan(planRq, projectCode);
         assertTrue(planRs.getStatus(), "Не удалось создать тест-план через API!");
         int planId = planRs.getResult().getId();
-
         var getPlanResponse = PlanAdapter.getPlan(projectCode, planId);
         assertEquals(getPlanResponse.jsonPath().getString("result.title"), planRq.getTitle(),
                 "Название тест-плана не совпадает со сгенерированным ИИ!");
         assertEquals(getPlanResponse.jsonPath().getList("result.cases.case_id").get(0), caseId,
                 "ID тест-кейса внутри плана сохранился некорректно!");
-
         PlanAdapter.deletePlan(projectCode, planId);
         log.info("План ID {} успешно деинсталлирован.", planId);
     }
