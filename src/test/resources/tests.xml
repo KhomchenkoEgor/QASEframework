@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org">
+<!-- Строгая последовательность для стабильности ИИ-генератора и React-сессий UI -->
+<suite name="Qase Ultimate Full Automation Suite" verbose="1">
+
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="listeners.TestListener"/>
+        <listener class-name="listeners.RetryListener"/>
+    </listeners>
+
+    <test name="All API and UI Tests Sequential Run">
+        <!-- Дефолтный браузер для UI-тестов, входящих в общий прогон -->
+        <parameter name="browser" value="chrome"/>
+
+        <!-- Сканируем абсолютно все тесты в обоих пакетах без фильтрации по группам -->
+        <packages>
+            <package name="tests.api"/>
+            <package name="tests.ui"/>
+        </packages>
+    </test>
+</suite>
