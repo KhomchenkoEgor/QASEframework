@@ -22,28 +22,36 @@ public class LoginPage {
 
     @Step("Открыть страницу авторизации")
     public LoginPage openPage() {
+        log.info("UI: Открытие веб-страницы авторизации Qase.io");
         open("/login");
         return this;
     }
 
     @Step("Выполнить вход в систему пользователем: '{user}'")
     public ProjectsPage login(String user, String password) {
+        log.info("UI: Начало авторизации под пользователем: {}", user);
         $(shadowCss("#accept", "#usercentrics-cmp-ui")).click();
+        log.info("UI: Заполнение поля Email");
         $(LOGIN).setValue(user);
+        log.info("UI: Заполнение поля Password");
         $(PASSWORD).setValue(password);
+        log.info("UI: Клик по кнопке '{}'", SIGN_IN);
         $(byText(SIGN_IN)).click();
+        log.info("UI: Ожидание индикатора успешной загрузки страницы проектов: '{}'", PROJECTS);
         $(byText(PROJECTS)).shouldBe(visible);
         return new ProjectsPage();
     }
 
     @Step("Выполнить попытку входа с невалидными данными пользователем: '{user}'")
     public LoginPage loginWithInvalidCredentials(String user, String password) {
+        log.info("UI: Попытка невалидной авторизации под пользователем: {}", user);
         if ($(shadowCss("#accept", "#usercentrics-cmp-ui")).is(visible)) {
             $(shadowCss("#accept", "#usercentrics-cmp-ui")).click();
         }
-
+        log.info("UI: Ввод Email: {} и Password", user);
         $(LOGIN).setValue(user);
         $(PASSWORD).setValue(password);
+        log.info("UI: Отправка формы авторизации");
         $(byText(SIGN_IN)).click();
 
         return this;
@@ -51,6 +59,7 @@ public class LoginPage {
 
     @Step("Проверить отображение глобальной ошибки безопасности '{expectedError}'")
     public LoginPage checkGlobalError(String expectedError) {
+        log.info("UI: Ожидание и проверка текста глобального алерта ошибки: {}", expectedError);
         $(GLOBAL_ERROR_ALERT)
                 .shouldBe(visible, java.time.Duration.ofSeconds(5))
                 .shouldHave(text(expectedError));
@@ -59,10 +68,10 @@ public class LoginPage {
 
     @Step("Проверить ошибку валидации формата поля: '{expectedError}'")
     public LoginPage checkFieldError(String expectedErrorPass) {
+        log.info("UI: Ожидание и проверка текста локальной ошибки валидации инпута: {}", expectedErrorPass);
         $(FIELD_ERROR_MESSAGE)
                 .shouldBe(visible, java.time.Duration.ofSeconds(5))
                 .shouldHave(partialText(expectedErrorPass));
         return this;
     }
 }
-

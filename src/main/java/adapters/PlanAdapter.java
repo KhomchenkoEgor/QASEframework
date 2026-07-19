@@ -1,11 +1,16 @@
 package adapters;
 
+import io.qameta.allure.Step;
+import io.restassured.response.Response;
+import lombok.extern.log4j.Log4j2;
 import models.plan.PlanRq;
 import models.plan.PlanRs;
 import static io.restassured.RestAssured.given;
 
+@Log4j2
 public class PlanAdapter extends BaseAdapter {
 
+    @Step("API: Создание тест-плана '{planRq.title}' в проекте '{projectCode}'")
     public static PlanRs createPlan(PlanRq planRq, String projectCode) {
         return given()
                 .spec(spec)
@@ -20,7 +25,8 @@ public class PlanAdapter extends BaseAdapter {
                 .as(PlanRs.class);
     }
 
-    public static io.restassured.response.Response getPlan(String projectCode, Integer planId) {
+    @Step("API: Получение данных тест-плана ID {planId} из проекта '{projectCode}'")
+    public static Response getPlan(String projectCode, Integer planId) {
         return given()
                 .spec(spec)
                 .when()
@@ -33,7 +39,8 @@ public class PlanAdapter extends BaseAdapter {
                 .response();
     }
 
-    public static io.restassured.response.Response deletePlan(String projectCode, Integer planId) {
+    @Step("API: Удаление тест-плана ID {planId} из проекта '{projectCode}'")
+    public static Response deletePlan(String projectCode, Integer planId) {
         return given()
                 .spec(spec)
                 .when()

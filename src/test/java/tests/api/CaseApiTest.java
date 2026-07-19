@@ -2,6 +2,8 @@ package tests.api;
 
 import adapters.CaseAdapter;
 import adapters.ProjectAdapter;
+import io.qameta.allure.*;
+import lombok.extern.log4j.Log4j2;
 import models.cases.CaseRq;
 import models.cases.CaseRs;
 import models.cases.Step;
@@ -12,14 +14,19 @@ import java.util.List;
 
 import static org.testng.Assert.*;
 
-
+@Log4j2
+@Epic("Qase API Engine")
+@Feature("Тест-кейсы")
+@Story("CRUD операции над тест-кейсами")
+@Owner("Khomchenko E.S.")
 public class CaseApiTest {
 
     private final String projectCode = "QA34" + (int)(Math.random() * 100000);
     private Integer caseId;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void createProjectBeforeTest() {
+        log.info("API Предусловие: Инициализация изолированного репозитория через ИИ");
         ProjectRq projectRq = ProjectRq.builder()
                 .title("Automation Project " + projectCode)
                 .code(projectCode)
@@ -31,8 +38,15 @@ public class CaseApiTest {
         assertTrue(projectRs.getStatus(), "Не удалось создать проект перед тестами!");
     }
 
-    @Test
+    @Test(
+            testName = "Полный CRUD тест-кейса через API",
+            description = "Проверка последовательного создания, обновления, чтения и удаления кейса с ИИ-генерацией шагов",
+            groups = {"regression"})
+    @Description("Сквозной бэкенд тест. Генерирует шаги на русском языке через Qwen, валидирует сохранение ID и делает Patch-апдейт структуры")
+    @Severity(SeverityLevel.CRITICAL)
+    @TmsLink("QASE-API-02")
     public void checkCRUDCase() {
+        log.info("Тест: Создание тест-кейса в проекте {}", projectCode);
         Step step = Step.builder()
                 .action("Открыть главную страницу")
                 .expected_result("Страница открылась")
@@ -86,6 +100,7 @@ public class CaseApiTest {
 
     @AfterMethod(alwaysRun = true)
     public void deleteProjectAfterTest() {
+        log.info("API Postcondition: Удаление временного проекта {}", projectCode);
         ProjectAdapter.deleteProject(projectCode);
     }
 }

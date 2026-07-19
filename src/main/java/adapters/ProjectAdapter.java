@@ -2,15 +2,15 @@ package adapters;
 
 import com.google.gson.Gson;
 import io.restassured.http.ContentType;
+import lombok.extern.log4j.Log4j2;
 import models.project.ProjectRq;
 import models.project.ProjectRs;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 
+@Log4j2
 public class ProjectAdapter extends BaseAdapter{
-
-    static Gson gson = new Gson();
 
     public static ProjectRs createProject(ProjectRq rq) {
         return given()

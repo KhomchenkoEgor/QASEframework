@@ -6,30 +6,86 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Java CI with Maven
+name: Manual Qase Test Execution & Allure Report
 
+# Строго ручной запуск по кнопке из интерфейса GitHub
 on:
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Выберите тест-сьют для запуска:'
+        required: true
+        default: 'api-smoke'
+        type: choice
+        options:
+          - 'api-smoke'
+          - 'ui-smoke'
+          - 'api-regression'
+          - 'ui-regression'
 
 jobs:
-  build:
-
+  run-tests:
+    name: Execute Tests & Publish Report
     runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: maven
-    - name: Build with Maven
-      run: mvn -B package --file pom.xml
+    env:
+      QASE_TOKEN: ${{ secrets.QASE_API_TOKEN }}
+      USER_EMAIL: ${{ secrets.QASE_USER_EMAIL }}
+      USER_PASSWORD: ${{ secrets.QASE_USER_PASSWORD }}
 
-    # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
-    - name: Update dependency graph
-      uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      # Шаг инициализации ИИ: запускается ТОЛЬКО если выбран один из API сьютов
+      - name: Install and Start Ollama Engine (API Only)
+        if: contains(inputs.test_suite, 'api')
+        run: |
+          curl -fsSL https://ollama.com | sh
+          ollama serve &
+          echo "Waiting for Ollama engine to wake up..."
+          sleep 7
+          echo "Pulling Qwen-Coder micro model..."
+          ollama pull qwen2.5-coder:7b
+
+      # Запуск тестов через Maven с динамической подстановкой XML
+      # Флаг continue-on-error: true обязателен, чтобы упавшие тесты не прерывали сборку отчета Allure
+      - name: Run Automation Tests
+        run: |
+          echo "Запускается сьют: ${{ inputs.test_suite }}-suite.xml"
+          mvn clean test -DsuiteXmlFile=src/test/resources/${{ inputs.test_suite }}-suite.xml -Dtoken=$QASE_TOKEN -Duser=$USER_EMAIL -Dpassword=$USER_PASSWORD
+        continue-on-error: true
+
+      # Вытягиваем ветку gh-pages для сохранения истории прошлых запусков в Allure
+      - name: Get Allure history
+        uses: actions/checkout@v4
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      # Собираем Allure Report (подхватывает результаты из target/allure-results)
+      - name: Generate Allure Report
+        uses: simple-elf/allure-report-action@master
+        if: always()
+        with:
+          allure_results: target/allure-results
+          allure_history: allure-history
+          keep_reports: 20
+
+      # Публикуем сгенерированный отчет в GitHub Pages
+      - name: Deploy Allure Report to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
