@@ -13,10 +13,10 @@
             <package name="tests.api"/>
         </packages>
     </test>
-<!--    <test name="Phase 2 - Pure UI Tests Run">-->
-<!--        <parameter name="browser" value="chrome"/>-->
-<!--        <packages>-->
-<!--            <package name="tests.ui"/>-->
-<!--        </packages>-->
-<!--    </test>-->
+    <test name="Phase 2 - Pure UI Tests Run">
+        <parameter name="browser" value="chrome"/>
+        <packages>
+            <package name="tests.ui"/>
+        </packages>
+    </test>
 </suite>
