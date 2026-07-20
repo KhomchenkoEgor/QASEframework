@@ -45,7 +45,7 @@ public class ProjectApiTest {
         if (projectCode.get() != null) {
             log.info("API Очистка: Каскадное удаление временного проекта с кодом: {}", projectCode.get());
             ProjectAdapter.deleteProject(projectCode.get());
-            projectCode.remove(); // Защищаем поток от утечек данных
+            projectCode.remove();
         }
     }
 }
