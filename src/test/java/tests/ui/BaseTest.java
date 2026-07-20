@@ -43,6 +43,7 @@ public class BaseTest {
         Configuration.timeout = 30000;
         Configuration.clickViaJs = true;
         Configuration.browserSize = "1920x1080";
+        Configuration.headless = true;
 
         if (browser.equalsIgnoreCase("chrome")) {
             ChromeOptions options = new ChromeOptions();
@@ -51,6 +52,7 @@ public class BaseTest {
             chromePrefs.put("profile.password_manager_enabled", false);
             options.setExperimentalOption("prefs", chromePrefs);
             options.addArguments(
+                    "--headless",
                     "--incognito",
                     "--disable-notifications",
                     "--disable-popup-blocking",
@@ -59,12 +61,13 @@ public class BaseTest {
             Configuration.browserCapabilities = options;
         } else if (browser.equalsIgnoreCase("edge")) {
             EdgeOptions options = new EdgeOptions();
+            options.addArguments("--headless");
             Configuration.browserCapabilities = options;
         } else if (browser.equalsIgnoreCase("firefox")) {
             FirefoxOptions options = new FirefoxOptions();
+            options.addArguments("--headless");
             Configuration.browserCapabilities = options;
         }
-
 
         loginPage = new LoginPage();
         projectsPage = new ProjectsPage();
