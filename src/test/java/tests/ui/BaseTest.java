@@ -43,6 +43,7 @@ public class BaseTest {
         Configuration.timeout = 30000;
         Configuration.clickViaJs = true;
         Configuration.browserSize = "1920x1080";
+        Configuration.headless = true;
 
         if (browser.equalsIgnoreCase("chrome")) {
             ChromeOptions options = new ChromeOptions();
