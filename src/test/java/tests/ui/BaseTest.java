@@ -52,6 +52,7 @@ public class BaseTest {
             chromePrefs.put("profile.password_manager_enabled", false);
             options.setExperimentalOption("prefs", chromePrefs);
             options.addArguments(
+                    "--headless",
                     "--incognito",
                     "--disable-notifications",
                     "--disable-popup-blocking",
@@ -60,12 +61,13 @@ public class BaseTest {
             Configuration.browserCapabilities = options;
         } else if (browser.equalsIgnoreCase("edge")) {
             EdgeOptions options = new EdgeOptions();
+            options.addArguments("--headless");
             Configuration.browserCapabilities = options;
         } else if (browser.equalsIgnoreCase("firefox")) {
             FirefoxOptions options = new FirefoxOptions();
+            options.addArguments("--headless");
             Configuration.browserCapabilities = options;
         }
-
 
         loginPage = new LoginPage();
         projectsPage = new ProjectsPage();
