@@ -32,7 +32,7 @@ public class TestListener implements ITestListener {
         log.error("======== FAILED TEST: {} | Duration: {}s ========",
                 result.getName(),
                 getExecutionTime(result));
-        takeScreenshot();
+//        takeScreenshot();
     }
 
     @Attachment(value = "Screenshot on failure", type = "image/png")
